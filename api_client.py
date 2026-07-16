@@ -1,15 +1,20 @@
-"""Client for the City of Melbourne 'Microclimate Sensor Readings' dataset.
+"""Client for the City of Melbourne 'Microclimate sensors data' dataset.
 
-Docs: https://data.melbourne.vic.gov.au/explore/dataset/microclimate-sensor-readings/
+Docs: https://data.melbourne.vic.gov.au/explore/dataset/microclimate-sensors-data/
 The dataset is served through Opendatasoft's Explore API v2, which is a
 plain paginated JSON endpoint (no auth needed for public read access).
+
+Note: this dataset returns one row per (site_id, local_time, type) —
+temperature and humidity are separate rows sharing the same site/time,
+distinguished by a `type` code (e.g. "TPH.TEMP", "TPH.RH"). See
+transform.py for how these get pivoted into one row per site/time.
 """
 import time
 import requests
 
 BASE_URL = (
     "https://data.melbourne.vic.gov.au/api/explore/v2.1/catalog/datasets/"
-    "microclimate-sensor-readings/records"
+    "microclimate-sensors-data/records"
 )
 PAGE_SIZE = 100  # API max per page is 100
 
