@@ -1,10 +1,15 @@
+<<<<<<< HEAD
 # Bloomeroo Microclimate Loader
 
+=======
+# PS_Bloom
+>>>>>>> feb3eeef4a68c40e3a328b13a93eecd3766d2f28
 A small CLI that fetches readings from the City of Melbourne
 [Microclimate Sensor Readings](https://data.melbourne.vic.gov.au/explore/dataset/microclimate-sensor-readings/)
 API and loads them into Postgres so the analyst team can look at
 temperature/humidity patterns by location and time.
 
+<<<<<<< HEAD
 ## How it works
 
 ```
@@ -14,6 +19,8 @@ db.py           insert_readings()    -> bulk insert, skips duplicates
 load_data.py                          -> CLI that wires the three together
 ```
 
+=======
+>>>>>>> feb3eeef4a68c40e3a328b13a93eecd3766d2f28
 ## 1. Prepare the database
 
 You need a running Postgres instance (any local install or Docker works).
@@ -46,6 +53,7 @@ pip install -r requirements.txt
 ```bash
 python load_data.py --limit 1000
 ```
+<<<<<<< HEAD
 
 This fetches at least 1000 records (paginating 100 at a time), transforms
 them, and inserts new rows. Output looks like:
@@ -101,3 +109,5 @@ no live API or database needed to run them.
 - Structured logging instead of `print`, and a `--dry-run` flag.
 - A small Dockerfile / docker-compose for a one-command local setup
   (Postgres + loader).
+=======
+>>>>>>> feb3eeef4a68c40e3a328b13a93eecd3766d2f28
