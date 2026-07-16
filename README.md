@@ -1,26 +1,11 @@
-<<<<<<< HEAD
 # Bloomeroo Microclimate Loader
 
-=======
-# PS_Bloom
->>>>>>> feb3eeef4a68c40e3a328b13a93eecd3766d2f28
 A small CLI that fetches readings from the City of Melbourne
-[Microclimate Sensor Readings](https://data.melbourne.vic.gov.au/explore/dataset/microclimate-sensor-readings/)
+[Microclimate sensors data](https://data.melbourne.vic.gov.au/explore/dataset/microclimate-sensors-data/)
 API and loads them into Postgres so the analyst team can look at
 temperature/humidity patterns by location and time.
 
-<<<<<<< HEAD
 ## How it works
-
-```
-api_client.py   fetch_records()      -> pages through the public API
-transform.py    transform_records()  -> maps raw fields to our DB row shape
-db.py           insert_readings()    -> bulk insert, skips duplicates
-load_data.py                          -> CLI that wires the three together
-```
-
-=======
->>>>>>> feb3eeef4a68c40e3a328b13a93eecd3766d2f28
 ## 1. Prepare the database
 
 You need a running Postgres instance (any local install or Docker works).
@@ -53,45 +38,43 @@ pip install -r requirements.txt
 ```bash
 python load_data.py --limit 1000
 ```
-<<<<<<< HEAD
 
 This fetches at least 1000 records (paginating 100 at a time), transforms
 them, and inserts new rows. Output looks like:
-
-```
-Fetching up to 1000 records from the API...
-Fetched 1000 raw records. Transforming...
-Connecting to Postgres...
-Done. Inserted 1000 new row(s), skipped 0 duplicate(s).
-```
-
 Run it again and you'll see `skipped 1000 duplicate(s)` instead — no
-duplicate rows land in the table.
+duplicate rows land in the table. Verified end-to-end against the live
+API on 2026-07-16, with 1000 rows loaded and dedup confirmed on re-run.
 
 ## 5. Run the tests
 
 ```bash
-python -m pytest
+python -m pytest -v
 ```
 
-Tests cover `transform.py` (field mapping / bad-record handling) and
-`api_client.py` (pagination, respecting `limit`) using mocked HTTP calls —
-no live API or database needed to run them.
+6 tests cover `transform.py` (field mapping, missing-field handling, a
+record with no `latlong`) and `api_client.py` (pagination, respecting
+`limit`) using mocked HTTP calls — no live API or database needed.
 
 ## Design decisions & assumptions
 
 - **Duplicates**: handled at the database level via a unique constraint
   on `(site_id, reading_time)`, so the loader can simply be re-run
   (e.g. on a schedule) without ever double-counting a reading.
-- **Field names**: the live API wasn't reachable from the environment
-  this was written in, so `transform.py`'s `FIELD_MAP` is based on the
-  published data dictionary rather than a confirmed live response. If the
-  real field names differ (e.g. temperature/humidity arrive as separate
-  rows via a `type`/`value` pair rather than dedicated columns), only
-  `transform.py` needs to change — everything downstream stays the same.
+- **Dataset**: uses `microclimate-sensors-data`, the current, live dataset
+  (~950k total records, updated every 15 minutes). An earlier, deprecated
+  dataset (`microclimate-sensor-readings`) was capped at ~56 historical
+  rows and ruled out during testing.
+- **Field mapping** (confirmed against a live API response):
+  `device_id` → `site_id`, `received_at` → `reading_time`,
+  `airtemperature` → `temperature`, `relativehumidity` → `humidity`,
+  `latlong.lat`/`latlong.lon` → `latitude`/`longitude`.
+- **Other fields ignored**: the API also returns wind speed/direction,
+  atmospheric pressure, PM2.5, PM10, and noise. These aren't needed for
+  the stated use case (temperature/humidity by location and time) and
+  are left out of the schema to keep things simple.
 - **Schema is flat** (one row per site per timestamp with a temperature
   and humidity column) rather than a generic key/value table, since that's
-  the simplest shape for the stated use case (patterns by location/time).
+  the simplest shape for the stated use case.
 - **Retries**: `api_client.py` retries transient network errors 3x with a
   short backoff, since this is a public API over the internet.
 - **No ORM**: plain `psycopg2` felt like enough for one table and one
@@ -109,5 +92,3 @@ no live API or database needed to run them.
 - Structured logging instead of `print`, and a `--dry-run` flag.
 - A small Dockerfile / docker-compose for a one-command local setup
   (Postgres + loader).
-=======
->>>>>>> feb3eeef4a68c40e3a328b13a93eecd3766d2f28
